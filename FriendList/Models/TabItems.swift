@@ -29,7 +29,7 @@ case money, friend, main, accounting, setting
         case .money:
             return "moneyVC"
         case .friend:
-            return "friendVC"
+            return "FriendViewController"
         case .main:
             return "homeVC"
         case .accounting:

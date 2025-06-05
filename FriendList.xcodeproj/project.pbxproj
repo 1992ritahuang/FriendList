@@ -30,7 +30,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		6A96A38B2DF08C72006C11C4 /* Exceptions for "FriendList" folder in "FriendList" target */ = {
+		6A96A4842DF14050006C11C4 /* Exceptions for "FriendList" folder in "FriendList" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -43,7 +43,7 @@
 		6A96A3652DF08C70006C11C4 /* FriendList */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				6A96A38B2DF08C72006C11C4 /* Exceptions for "FriendList" folder in "FriendList" target */,
+				6A96A4842DF14050006C11C4 /* Exceptions for "FriendList" folder in "FriendList" target */,
 			);
 			path = FriendList;
 			sourceTree = "<group>";

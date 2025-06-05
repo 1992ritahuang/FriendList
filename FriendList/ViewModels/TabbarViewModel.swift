@@ -15,7 +15,7 @@ class TabbarViewModel {
             if let icon = item.iconName {
                 vc.tabBarItem = UITabBarItem(title: nil, image: UIImage(named: icon), tag: item.rawValue)
             }
-            return vc
+            return UINavigationController(rootViewController: vc) // 包裹在 UINavigationController 中
         }
     }
 
