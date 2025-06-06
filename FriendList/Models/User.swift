@@ -1,7 +1,7 @@
 import Foundation
 
 struct UserResponse: Codable {
-    let response: User
+    let response: [User]
 }
 
 struct User: Codable {

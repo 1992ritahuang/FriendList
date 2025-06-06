@@ -2,21 +2,34 @@ import Foundation
 import Combine
 
 class FriendViewModel {
-    @Published var friends: [Friend] = [] // 使用 Combine 的 @Published 屬性
-    private var cancellables = Set<AnyCancellable>() // 用於管理 Combine 的訂閱
+    @Published var user: User?  //個人資料
+    @Published var friends: [Friend] = [] //已經是朋友的那些人
+    @Published var invites: [Friend] = [] //送出邀請的那些人
+    
+    private var cancellables = Set<AnyCancellable>()
 
-    func fetchFriends() {
-        ApiService.shared.fetchFriendList1()
-            .receive(on: DispatchQueue.main) // 確保更新 UI 在主線程
-            .sink(receiveCompletion: { completion in
-                switch completion {
+    func fetchData() {
+        ApiService.shared.fetchUserData()
+            .receive(on: DispatchQueue.main)
+            .sink(receiveCompletion: { complete in
+                switch complete {
                 case .failure(let error):
-                    print("Error fetching friends: \(error)")
-                case .finished:
-                    break
+                    print("--- \(error)")
+                default: break
+                    //
                 }
-            }, receiveValue: { [weak self] friendNames in
-                self?.friends = friendNames
+                
+            }, receiveValue: { [weak self] users in
+                self?.user = users.first
+            })
+            .store(in: &cancellables)
+        
+        ApiService.shared.fetchFriendListWithInvites()
+            .receive(on: DispatchQueue.main)
+            .sink(receiveCompletion: { _ in
+            }, receiveValue: { [weak self] friends in
+                self?.invites = friends.filter { $0.status == 0 }
+                self?.friends = friends
             })
             .store(in: &cancellables)
     }

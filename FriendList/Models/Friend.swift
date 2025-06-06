@@ -1,13 +1,17 @@
 import Foundation
 
+enum StatusType:Int {
+    case invited, finish, inviting
+}
+
 struct FriendListResponse: Codable {
     let response: [Friend]
 }
 
-struct Friend: Codable {
-    let status: Int // 0:邀請送出, 1:已完成, 2:邀請中
+struct Friend: Codable, Hashable {
+    let status: Int // 0:invited, 1:finished, 2:inviting
     let name: String
-    let isTop: String // 可能為"0"或"1"，根據實際情況選擇合適的類型
+    let isTop: String // "0", "1"
     let fid: String // "001"
-    let updateDate: String // 可能為"2019/08/02"或"20190804"，根據實際情況選擇合適的日期格式
+    let updateDate: String //"2019/08/02" or "20190804"
 }

@@ -7,7 +7,7 @@ class ApiService {
 
     private init() {}
 
-    func fetchUserData() -> AnyPublisher<User, Error> {
+    func fetchUserData() -> AnyPublisher<[User], Error> {
         fetchData(from: "\(baseURL)/man.json")
             .decode(type: UserResponse.self, decoder: JSONDecoder())
             .map { $0.response }

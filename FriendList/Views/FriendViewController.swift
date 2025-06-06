@@ -1,31 +1,60 @@
 import UIKit
 import Combine
 
+fileprivate enum Section: Int, CaseIterable {
+    case invite
+    case segment
+    case search
+    case friends
+    case empty
+}
+
+fileprivate enum Item: Hashable, Sendable {
+    case invite(Friend)
+    case segment(String)
+    case search(String)
+    case friend(Friend)
+    case empty
+}
+
 class FriendViewController: UIViewController {
+    @IBOutlet weak var collectionView: UICollectionView!
+    @IBOutlet weak var lblName: UILabel!
+    @IBOutlet weak var lblKokoID: UILabel!
+    
     private let viewModel = FriendViewModel()
-    private var cancellables = Set<AnyCancellable>() // 用於管理 Combine 的訂閱
+    private var cancellables = Set<AnyCancellable>()
+    private var dataSource: UICollectionViewDiffableDataSource<Section, Item>!
 
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
-        navigationController?.navigationBar.tintColor = .systemPink // 設置 navigation bar tintColor 為 hotPink
+        navigationController?.navigationBar.tintColor = .hotPink
         setupNavigationBarItems()
-        bindViewModel() // 綁定 ViewModel
+        configureCollectionView()
+        configureDataSource()
+        bindViewModel()
     }
-    
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        viewModel.fetchFriends() // 使用 ViewModel 方法
+        viewModel.fetchData()
     }
 
     private func bindViewModel() {
-        viewModel.$friends
-            .receive(on: DispatchQueue.main) // 確保更新 UI 在主線程
-            .sink { [weak self] friends in
-                print("Updated friends: \(friends)")
+        Publishers.CombineLatest3(viewModel.$user, viewModel.$friends, viewModel.$invites)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] user, friends, invites in
+                guard let self = self else { return }
+                self.applySnapshot(friends: friends, invites: invites)
+                self.lblName.text = user?.name ?? ""
+                self.lblKokoID.text = "KOKO ID: \(user?.kokoid ?? "")"
             }
             .store(in: &cancellables)
+        
     }
+    
+    //MARK: Navigation bar related
 
     private func setupNavigationBarItems() {
         let withdrawButton = UIBarButtonItem(image: UIImage(named: "icNavPinkWithdraw"), style: .plain, target: self, action: #selector(withdrawTapped))
@@ -36,15 +65,108 @@ class FriendViewController: UIViewController {
         navigationItem.rightBarButtonItem = scanButton
     }
 
-    @objc private func withdrawTapped() {
-        // 處理 withdraw 按鈕點擊事件
+    @objc private func withdrawTapped() {}
+    @objc private func transferTapped() {}
+    @objc private func scanTapped() {}
+    
+    //MARK: collectionView related
+
+    private func configureCollectionView() {
+        collectionView.collectionViewLayout = createLayout()
+        collectionView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        collectionView.backgroundColor = .white
+        view.addSubview(collectionView)
     }
 
-    @objc private func transferTapped() {
-        // 處理 transfer 按鈕點擊事件
+    private func configureDataSource() {
+        dataSource = UICollectionViewDiffableDataSource<Section, Item>(collectionView: collectionView) { collectionView, indexPath, item in
+            switch item {
+            case .invite(let friend):
+                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "InviteCell", for: indexPath) as! InviteCell
+                cell.configure(with: friend)
+                return cell
+            case .segment(let title):
+                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "SegmentCell", for: indexPath) as! SegmentCell
+                cell.configure(title: title)
+                return cell
+            case .search:
+                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "SearchCell", for: indexPath) as! SearchCell
+                cell.configure()
+                return cell
+            case .friend(let friend):
+                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "FriendCell", for: indexPath) as! FriendCell
+                cell.configure(with: friend)
+                return cell
+            case .empty:
+                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "EmptyCell", for: indexPath) as! EmptyCell
+                cell.configure()
+                return cell
+            }
+        }
+
     }
 
-    @objc private func scanTapped() {
-        // 處理 scan 按鈕點擊事件
+    private func applySnapshot(friends: [Friend], invites: [Friend]) {
+        var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
+        snapshot.appendSections([.invite, .segment, .search, .friends])
+        snapshot.appendItems(invites.map { .invite($0) }, toSection: .invite)
+        snapshot.appendItems(["好友", "聊天"].map { .segment($0) }, toSection: .segment)
+        
+        if friends.isEmpty {
+            snapshot.appendSections([.empty])
+            snapshot.appendItems([.empty], toSection: .empty)
+        } else {
+            snapshot.appendItems([.search("search")], toSection: .search)
+            snapshot.appendItems(friends.map { .friend($0) }, toSection: .friends)
+        }
+        dataSource.apply(snapshot, animatingDifferences: true)
+    }
+
+    private func createLayout() -> UICollectionViewLayout {
+        return UICollectionViewCompositionalLayout { sectionIndex, _ in
+            let section = Section(rawValue: sectionIndex)!
+            var layoutSection: NSCollectionLayoutSection
+
+            switch section {
+            case .invite:
+                let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(80))
+                let item = NSCollectionLayoutItem(layoutSize: itemSize)
+                let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(160))
+                let group = NSCollectionLayoutGroup.vertical(layoutSize: groupSize, subitem: item, count: 2)
+                layoutSection = NSCollectionLayoutSection(group: group)
+                layoutSection.orthogonalScrollingBehavior = .continuous
+
+//                let headerSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(100))
+//                let header = NSCollectionLayoutBoundarySupplementaryItem(layoutSize: headerSize, elementKind: UICollectionView.elementKindSectionHeader, alignment: .top)
+//                layoutSection.boundarySupplementaryItems = [header]
+
+            case .segment:
+                let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.4), heightDimension: .absolute(48))
+                let item = NSCollectionLayoutItem(layoutSize: itemSize)
+                let group = NSCollectionLayoutGroup.horizontal(layoutSize: itemSize, subitems: [item])
+                layoutSection = NSCollectionLayoutSection(group: group)
+
+            case .search:
+                let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(70))
+                let item = NSCollectionLayoutItem(layoutSize: itemSize)
+                let group = NSCollectionLayoutGroup.horizontal(layoutSize: itemSize, subitems: [item])
+                layoutSection = NSCollectionLayoutSection(group: group)
+
+            case .friends:
+                let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(60))
+                let item = NSCollectionLayoutItem(layoutSize: itemSize)
+                let group = NSCollectionLayoutGroup.vertical(layoutSize: itemSize, subitems: [item])
+                layoutSection = NSCollectionLayoutSection(group: group)
+//                layoutSection.orthogonalScrollingBehavior = .continuous
+                
+            case .empty:
+                let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(300))
+                let item = NSCollectionLayoutItem(layoutSize: itemSize)
+                let group = NSCollectionLayoutGroup.vertical(layoutSize: itemSize, subitems: [item])
+                return NSCollectionLayoutSection(group: group)
+            }
+
+            return layoutSection
+        }
     }
 }
