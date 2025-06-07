@@ -22,7 +22,7 @@ class FriendViewController: UIViewController {
     @IBOutlet weak var lblName: UILabel!
     @IBOutlet weak var lblKokoID: UILabel!
     
-    private let viewModel = FriendViewModel()
+    var viewModel: FriendViewModel?
     private var cancellables = Set<AnyCancellable>()
     private var dataSource: UICollectionViewDiffableDataSource<Section, Item>!
 
@@ -33,15 +33,16 @@ class FriendViewController: UIViewController {
         setupNavigationBarItems()
         configureCollectionView()
         configureDataSource()
-        bindViewModel()
+        guard let viewModel = viewModel else { return }
+        bindViewModel(viewModel)
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        viewModel.fetchData()
+        viewModel?.fetchData()
     }
 
-    private func bindViewModel() {
+    private func bindViewModel(_ viewModel: FriendViewModel) {
         Publishers.CombineLatest3(viewModel.$user, viewModel.$friends, viewModel.$invites)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] user, friends, invites in
