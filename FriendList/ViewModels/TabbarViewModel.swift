@@ -10,6 +10,10 @@ import UIKit
 class TabbarViewModel {
     var type: FriendListType = .friendsOnly
     
+    init(type: FriendListType) {
+        self.type = type
+    }
+    
     func makeViewControllers() -> [UIViewController] {
         return TabItems.allCases.compactMap { item in
             let storyboard = UIStoryboard(name: "Main", bundle: nil)

@@ -1,7 +1,7 @@
 import Foundation
 import Combine
 
-enum FriendListType {
+enum FriendListType: Int {
     case empty
     case friendsOnly
     case friendsWithInvite

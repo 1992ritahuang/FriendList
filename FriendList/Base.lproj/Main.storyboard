@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="23504" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="4sW-8f-e4e">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="23504" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="Wd4-pN-iSd">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23506"/>
+        <capability name="Image references" minToolsVersion="12.0"/>
         <capability name="Named colors" minToolsVersion="9.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
@@ -10,25 +11,80 @@
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
-        <!--View Controller-->
-        <scene sceneID="tne-QT-ifu">
+        <!--Start View Controller-->
+        <scene sceneID="rh4-Py-c7F">
             <objects>
-                <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="FriendList" customModuleProvider="target" sceneMemberID="viewController">
-                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
+                <viewController storyboardIdentifier="StartViewController" id="Wd4-pN-iSd" customClass="StartViewController" customModule="FriendList" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="kAa-X2-5Wk">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
+                        <subviews>
+                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="41" translatesAutoresizingMaskIntoConstraints="NO" id="73W-t1-SU2">
+                                <rect key="frame" x="106" y="333.66666666666669" width="181" height="185.00000000000006"/>
+                                <subviews>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="50p-Iy-vkd">
+                                        <rect key="frame" x="0.0" y="0.0" width="181" height="34.333333333333336"/>
+                                        <state key="normal" title="Button"/>
+                                        <buttonConfiguration key="configuration" style="filled" image="person.slash.fill" catalog="system" title="無好友畫⾯" imagePadding="8">
+                                            <color key="baseBackgroundColor" name="hotPink"/>
+                                        </buttonConfiguration>
+                                        <connections>
+                                            <action selector="buttonTapped:" destination="Wd4-pN-iSd" eventType="touchUpInside" id="W84-Ck-El4"/>
+                                        </connections>
+                                    </button>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="jdj-Ue-pUA">
+                                        <rect key="frame" x="0.0" y="75.333333333333314" width="181" height="34.333333333333343"/>
+                                        <state key="normal" title="Button"/>
+                                        <buttonConfiguration key="configuration" style="filled" image="person.3.fill" catalog="system" title="只有好友列表" imagePadding="8">
+                                            <color key="baseBackgroundColor" name="hotPink"/>
+                                        </buttonConfiguration>
+                                        <connections>
+                                            <action selector="buttonTapped:" destination="Wd4-pN-iSd" eventType="touchUpInside" id="AfC-vB-BoB"/>
+                                        </connections>
+                                    </button>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="4ZY-cB-O5V">
+                                        <rect key="frame" x="0.0" y="150.66666666666663" width="181" height="34.333333333333343"/>
+                                        <state key="normal" title="Button"/>
+                                        <buttonConfiguration key="configuration" style="filled" title="好友列表含邀請" imagePadding="8">
+                                            <imageReference key="image" image="envelope.badge.person.crop.fill" catalog="system" variableValue="0.40000000000000008"/>
+                                            <color key="baseBackgroundColor" name="hotPink"/>
+                                        </buttonConfiguration>
+                                        <connections>
+                                            <action selector="buttonTapped:" destination="Wd4-pN-iSd" eventType="touchUpInside" id="VXe-mU-hZX"/>
+                                        </connections>
+                                    </button>
+                                </subviews>
+                            </stackView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="選擇情境" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="HAl-BG-Cdo">
+                                <rect key="frame" x="150.66666666666666" y="153" width="91.666666666666657" height="28.666666666666657"/>
+                                <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="24"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="Yf8-EO-nBt"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="HAl-BG-Cdo" firstAttribute="top" secondItem="Yf8-EO-nBt" secondAttribute="top" constant="94" id="7NK-cX-3Sl"/>
+                            <constraint firstItem="73W-t1-SU2" firstAttribute="centerX" secondItem="kAa-X2-5Wk" secondAttribute="centerX" id="Ghy-YB-jyO"/>
+                            <constraint firstItem="HAl-BG-Cdo" firstAttribute="centerX" secondItem="kAa-X2-5Wk" secondAttribute="centerX" id="jVE-LQ-voa"/>
+                            <constraint firstItem="73W-t1-SU2" firstAttribute="centerY" secondItem="kAa-X2-5Wk" secondAttribute="centerY" id="xes-M9-qmh"/>
+                        </constraints>
                     </view>
+                    <connections>
+                        <outlet property="btnEmpty" destination="50p-Iy-vkd" id="Aar-AA-AlF"/>
+                        <outlet property="btnFriends" destination="jdj-Ue-pUA" id="8cj-IX-1pT"/>
+                        <outlet property="btnInvite" destination="4ZY-cB-O5V" id="cdc-Yl-k46"/>
+                    </connections>
                 </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="aYE-rJ-l0q" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-1207" y="-1194"/>
+            <point key="canvasLocation" x="-1282" y="-1194"/>
         </scene>
         <!--Tabbar View Controller-->
         <scene sceneID="H1q-eU-34h">
             <objects>
-                <tabBarController id="4sW-8f-e4e" customClass="TabbarViewController" customModule="FriendList" customModuleProvider="target" sceneMemberID="viewController">
+                <tabBarController storyboardIdentifier="TabbarViewController" id="4sW-8f-e4e" customClass="TabbarViewController" customModule="FriendList" customModuleProvider="target" sceneMemberID="viewController">
                     <tabBar key="tabBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="BQG-jy-Msu">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="49"/>
                         <autoresizingMask key="autoresizingMask"/>
@@ -435,6 +491,7 @@
     <resources>
         <image name="btnFriendsAgree" width="30" height="30"/>
         <image name="btnFriendsDelet" width="30" height="30"/>
+        <image name="envelope.badge.person.crop.fill" catalog="system" width="128" height="94"/>
         <image name="icBtnAddFriends" width="25" height="25"/>
         <image name="icFriendsMore" width="18" height="4"/>
         <image name="icFriendsStar" width="14" height="14"/>
@@ -442,6 +499,8 @@
         <image name="imgFriendsEmpty" width="245" height="172"/>
         <image name="imgFriendsFemaleDefault" width="52" height="54"/>
         <image name="imgFriendsList" width="40" height="40"/>
+        <image name="person.3.fill" catalog="system" width="128" height="66"/>
+        <image name="person.slash.fill" catalog="system" width="117" height="128"/>
         <namedColor name="hotPink">
             <color red="0.92549019607843142" green="0.0" blue="0.5490196078431373" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>

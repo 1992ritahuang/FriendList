@@ -11,7 +11,7 @@ import UIKit
 
 class TabbarViewController: UITabBarController {
     private let centerButton = UIButton()
-    private let viewModel = TabbarViewModel()
+    var viewModel: TabbarViewModel? = nil
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -19,10 +19,11 @@ class TabbarViewController: UITabBarController {
         tabBar.unselectedItemTintColor = .gray
         setupTabs()
         setupCenterButton()
+        selectedIndex = TabItems.friend.rawValue
     }
     
     private func setupTabs() {
-        viewControllers = viewModel.makeViewControllers()
+        viewControllers = viewModel?.makeViewControllers()
     }
     
     private func setupCenterButton() {
@@ -40,6 +41,7 @@ class TabbarViewController: UITabBarController {
     }
     
     @objc private func centerButtonTapped() {
-        selectedIndex = viewModel.centerTabIndex
+//        selectedIndex = viewModel?.centerTabIndex ?? 0
+        self.dismiss(animated: true)
     }
 }
