@@ -43,7 +43,14 @@ class FriendViewModel {
         case .empty:
             publisher = ApiService.shared.fetchEmptyFriendList()
         case .friendsOnly:
-            publisher = mergeTwoSources()
+            mergeTwoSources()
+                .receive(on: DispatchQueue.main)
+                .sink(receiveCompletion: { _ in
+                }, receiveValue: { [weak self] friends in
+                    self?.friends = friends
+                })
+                .store(in: &cancellables)
+            return
         case .friendsWithInvite:
             publisher = ApiService.shared.fetchFriendListWithInvites()
         }
@@ -52,8 +59,8 @@ class FriendViewModel {
             .receive(on: DispatchQueue.main)
             .sink(receiveCompletion: { _ in
             }, receiveValue: { [weak self] friends in
-                self?.invites = friends.filter { $0.status == 0 }
-                self?.friends = friends
+                self?.invites = friends.filter { $0.status == StatusType.inviting.rawValue }
+                self?.friends = friends.filter { $0.status != StatusType.inviting.rawValue }
             })
             .store(in: &cancellables)
     }
@@ -74,6 +81,7 @@ class FriendViewModel {
         let all = list1 + list2
         
         for friend in all {
+            guard friend.status != StatusType.inviting.rawValue else { continue }
             if let existing = merged[friend.fid] {
                 let date1 = existing.updateDate.toDate() ?? Date.distantPast
                 let date2 = friend.updateDate.toDate() ?? Date.distantPast
