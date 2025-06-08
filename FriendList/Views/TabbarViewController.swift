@@ -15,7 +15,7 @@ class TabbarViewController: UITabBarController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        tabBar.tintColor = .hotPink
+        tabBar.tintColor = .pinkEC008C
         tabBar.unselectedItemTintColor = .gray
         setupTabs()
         setupCenterButton()

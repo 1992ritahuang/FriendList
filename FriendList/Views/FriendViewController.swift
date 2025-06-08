@@ -29,7 +29,8 @@ class FriendViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
-        navigationController?.navigationBar.tintColor = .hotPink
+        navigationController?.navigationBar.tintColor = .pinkEC008C
+        setupNavigationBar()
         setupNavigationBarItems()
         configureCollectionView()
         configureDataSource()
@@ -65,6 +66,16 @@ class FriendViewController: UIViewController {
         let scanButton = UIBarButtonItem(image: UIImage(named: "icNavPinkScan"), style: .plain, target: self, action: #selector(scanTapped))
         navigationItem.rightBarButtonItem = scanButton
     }
+    
+    private func setupNavigationBar() {
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = .grayFCFCFC
+        appearance.shadowColor = .clear
+
+        navigationController?.navigationBar.standardAppearance = appearance
+        navigationController?.navigationBar.scrollEdgeAppearance = appearance
+    }
 
     @objc private func withdrawTapped() {}
     @objc private func transferTapped() {}
@@ -74,6 +85,7 @@ class FriendViewController: UIViewController {
 
     private func configureCollectionView() {
         collectionView.collectionViewLayout = createLayout()
+        collectionView.collectionViewLayout.register(SeparatorDecorationView.self, forDecorationViewOfKind: SeparatorDecorationView.elementKind)
         collectionView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         collectionView.backgroundColor = .white
         view.addSubview(collectionView)
@@ -100,7 +112,7 @@ class FriendViewController: UIViewController {
                 return cell
             case .empty:
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "EmptyCell", for: indexPath) as! EmptyCell
-                cell.configure()
+                cell.configure(with: self)
                 return cell
             }
         }
@@ -161,7 +173,7 @@ class FriendViewController: UIViewController {
 //                layoutSection.orthogonalScrollingBehavior = .continuous
                 
             case .empty:
-                let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(300))
+                let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(445))
                 let item = NSCollectionLayoutItem(layoutSize: itemSize)
                 let group = NSCollectionLayoutGroup.vertical(layoutSize: itemSize, subitems: [item])
                 return NSCollectionLayoutSection(group: group)
@@ -169,5 +181,12 @@ class FriendViewController: UIViewController {
 
             return layoutSection
         }
+    }
+}
+
+extension FriendViewController: UITextViewDelegate {
+    func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange) -> Bool {
+        //TODO: to set KOKO ID
+        return false
     }
 }
