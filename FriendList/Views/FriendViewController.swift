@@ -54,6 +54,16 @@ class FriendViewController: UIViewController {
             }
             .store(in: &cancellables)
         
+        //for search
+        viewModel.$filteredFriends
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] filteredFriends in
+                guard let self = self else { return }
+                self.applySnapshot(friends: self.viewModel?.friends ?? [],
+                                   filterFriends: filteredFriends,
+                                   invites: self.viewModel?.invites ?? [])
+            }
+            .store(in: &cancellables)
     }
     
     //MARK: Navigation bar related
@@ -104,7 +114,8 @@ class FriendViewController: UIViewController {
                 return cell
             case .search:
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "SearchCell", for: indexPath) as! SearchCell
-                cell.configure()
+                cell.configure(with: self)
+//                cell.searchBar.tag = indexPath.section
                 return cell
             case .friend(let friend):
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "FriendCell", for: indexPath) as! FriendCell
@@ -119,7 +130,7 @@ class FriendViewController: UIViewController {
 
     }
 
-    private func applySnapshot(friends: [Friend], invites: [Friend]) {
+    private func applySnapshot(friends: [Friend], filterFriends: [Friend]? = nil, invites: [Friend]) {
         var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
         snapshot.appendSections([.invite, .segment, .search, .friends])
         snapshot.appendItems(invites.map { .invite($0) }, toSection: .invite)
@@ -130,7 +141,11 @@ class FriendViewController: UIViewController {
             snapshot.appendItems([.empty], toSection: .empty)
         } else {
             snapshot.appendItems([.search("search")], toSection: .search)
-            snapshot.appendItems(friends.map { .friend($0) }, toSection: .friends)
+            if let filterFriends = filterFriends {
+                snapshot.appendItems(filterFriends.map { .friend($0) }, toSection: .friends)
+            } else {
+                snapshot.appendItems(friends.map { .friend($0) }, toSection: .friends)
+            }
         }
         dataSource.apply(snapshot, animatingDifferences: true)
     }
@@ -142,10 +157,10 @@ class FriendViewController: UIViewController {
 
             switch section {
             case .invite:
-                let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(80))
+                let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(88))
                 let item = NSCollectionLayoutItem(layoutSize: itemSize)
-                let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(160))
-                let group = NSCollectionLayoutGroup.vertical(layoutSize: groupSize, subitem: item, count: 2)
+                let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(176))
+                let group = NSCollectionLayoutGroup.vertical(layoutSize: groupSize, repeatingSubitem: item, count: 2)
                 layoutSection = NSCollectionLayoutSection(group: group)
                 layoutSection.orthogonalScrollingBehavior = .continuous
 
@@ -154,10 +169,14 @@ class FriendViewController: UIViewController {
 //                layoutSection.boundarySupplementaryItems = [header]
 
             case .segment:
-                let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.4), heightDimension: .absolute(48))
+                let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.4), heightDimension: .absolute(36))
                 let item = NSCollectionLayoutItem(layoutSize: itemSize)
                 let group = NSCollectionLayoutGroup.horizontal(layoutSize: itemSize, subitems: [item])
                 layoutSection = NSCollectionLayoutSection(group: group)
+                let decoration = NSCollectionLayoutDecorationItem.background(
+                    elementKind: SeparatorDecorationView.elementKind)
+                decoration.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 1, trailing: 0)
+                layoutSection.decorationItems = [decoration]
 
             case .search:
                 let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(70))
@@ -188,5 +207,11 @@ extension FriendViewController: UITextViewDelegate {
     func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange) -> Bool {
         //TODO: to set KOKO ID
         return false
+    }
+}
+
+extension FriendViewController: UISearchBarDelegate {
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        viewModel?.filterFriends(by: searchText)
     }
 }

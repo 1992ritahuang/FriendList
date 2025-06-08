@@ -23,21 +23,14 @@ class InviteCell: BaseCollectionViewCell {
         lblTitle.text = friend.name
         lblsubtitle.text = "邀請你成為好友：）"
         imgView.image = UIImage(named: "imgFriendsFemaleDefault")
+        setupShadow()
     }
     
     private func setupShadow() {
-        viewContainer.layer.cornerRadius = 6
-        viewContainer.layer.masksToBounds = false
-        
         viewContainer.layer.shadowColor = UIColor.black.cgColor
-        viewContainer.layer.shadowOpacity = 0.15
-        viewContainer.layer.shadowRadius = 8
+        viewContainer.layer.shadowOpacity = 0.1
+        viewContainer.layer.shadowRadius = 16
         viewContainer.layer.shadowOffset = CGSize(width: 0, height: 4)
-        
-        viewContainer.layer.shadowPath = UIBezierPath(
-            roundedRect: viewContainer.bounds,
-            cornerRadius: viewContainer.layer.cornerRadius
-        ).cgPath
     }
 }
 
@@ -50,9 +43,10 @@ class SegmentCell: BaseCollectionViewCell {
 class SearchCell: BaseCollectionViewCell {
     @IBOutlet weak var searchBar: UISearchBar!
     
-    func configure() {
+    func configure(with delegate: UISearchBarDelegate) {
         searchBar.backgroundImage = UIImage()
         searchBar.placeholder = "想轉一筆給誰呢？"
+        searchBar.delegate = delegate
     }
 }
 
@@ -62,7 +56,7 @@ class FriendCell: BaseCollectionViewCell {
     
     func configure(with friend: Friend) {
         lblTitle.text = friend.name
-        imgView.image = UIImage(named: "imgFriendsFemaleDefault")
+        imgView.isHidden = !friend.isTopFriend()
         btnInvite.isHidden = StatusType(rawValue: friend.status) != .invited
         btnMore.isHidden = !btnInvite.isHidden
         btnAction.layer.borderColor = btnAction.tintColor.cgColor

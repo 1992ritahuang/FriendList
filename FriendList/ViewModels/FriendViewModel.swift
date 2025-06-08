@@ -11,6 +11,7 @@ class FriendViewModel {
     @Published var user: User?  //個人資料
     @Published var friends: [Friend] = [] //已經是朋友的那些人
     @Published var invites: [Friend] = [] //送出邀請的那些人
+    @Published private(set) var filteredFriends: [Friend] = []
     private let type: FriendListType
     private var cancellables = Set<AnyCancellable>()
     
@@ -19,20 +20,22 @@ class FriendViewModel {
     }
     
     func fetchData() {
-        ApiService.shared.fetchUserData()
-            .receive(on: DispatchQueue.main)
-            .sink(receiveCompletion: { complete in
-                switch complete {
-                case .failure(let error):
-                    print("--- \(error)")
-                default: break
-                    //
-                }
-                
-            }, receiveValue: { [weak self] users in
-                self?.user = users.first
-            })
-            .store(in: &cancellables)
+        if type != .empty {
+            ApiService.shared.fetchUserData()
+                .receive(on: DispatchQueue.main)
+                .sink(receiveCompletion: { complete in
+                    switch complete {
+                    case .failure(let error):
+                        print("--- \(error)")
+                    default: break
+                        //
+                    }
+                    
+                }, receiveValue: { [weak self] users in
+                    self?.user = users.first
+                })
+                .store(in: &cancellables)
+        }
         
         var publisher: AnyPublisher<[Friend], Error>
         
@@ -82,5 +85,13 @@ class FriendViewModel {
             }
         }
         return Array(merged.values)
+    }
+    
+    func filterFriends(by keyword: String) {
+        if keyword.isEmpty {
+            filteredFriends = friends
+        } else {
+            filteredFriends = friends.filter { $0.name.contains(keyword) }
+        }
     }
 }

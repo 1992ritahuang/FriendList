@@ -579,7 +579,6 @@
                         <outlet property="collectionView" destination="jKH-jS-ZZX" id="Zdn-Dv-K1g"/>
                         <outlet property="lblKokoID" destination="Dsc-Tk-5wq" id="Vkt-Pa-qxn"/>
                         <outlet property="lblName" destination="jHD-xW-LS4" id="hKT-A0-c6P"/>
-                        <outlet property="viewInfo" destination="hpW-JB-hkT" id="BJD-3T-lkT"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="EkM-Qi-Vhm" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>

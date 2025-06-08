@@ -14,4 +14,8 @@ struct Friend: Codable, Hashable {
     let isTop: String // "0", "1"
     let fid: String // "001"
     let updateDate: String //"2019/08/02" or "20190804"
+    
+    func isTopFriend() -> Bool {
+        return isTop == "1"
+    }
 }
