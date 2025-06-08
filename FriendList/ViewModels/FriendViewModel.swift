@@ -8,9 +8,9 @@ enum FriendListType: Int {
 }
 
 class FriendViewModel {
-    @Published var user: User?  //個人資料
-    @Published var friends: [Friend] = [] //已經是朋友的那些人
-    @Published var invites: [Friend] = [] //送出邀請的那些人
+    @Published var user: User?
+    @Published var friends: [Friend] = []
+    @Published var invites: [Friend] = []
     @Published private(set) var filteredFriends: [Friend] = []
     private let type: FriendListType
     private var cancellables = Set<AnyCancellable>()
@@ -20,25 +20,24 @@ class FriendViewModel {
     }
     
     func fetchData() {
-        if type != .empty {
-            ApiService.shared.fetchUserData()
-                .receive(on: DispatchQueue.main)
-                .sink(receiveCompletion: { complete in
-                    switch complete {
-                    case .failure(let error):
-                        print("--- \(error)")
-                    default: break
-                        //
-                    }
-                    
-                }, receiveValue: { [weak self] users in
-                    self?.user = users.first
-                })
-                .store(in: &cancellables)
-        }
+        ApiService.shared.fetchUserData()
+            .receive(on: DispatchQueue.main)
+            .sink(receiveCompletion: { complete in
+                switch complete {
+                case .failure(let error):
+                    //TODO: error handle
+                    break
+                default: break
+                    //
+                }
+                
+            }, receiveValue: { [weak self] users in
+                guard let self = self else { return }
+                self.user = (self.type == .empty) ? User(name: users.first?.name ?? "", kokoid: "") : users.first
+            })
+            .store(in: &cancellables)
         
         var publisher: AnyPublisher<[Friend], Error>
-        
         switch type {
         case .empty:
             publisher = ApiService.shared.fetchEmptyFriendList()
@@ -46,8 +45,10 @@ class FriendViewModel {
             mergeTwoSources()
                 .receive(on: DispatchQueue.main)
                 .sink(receiveCompletion: { _ in
+                    //TODO: error handle
                 }, receiveValue: { [weak self] friends in
-                    self?.friends = friends
+                    guard let self = self else { return }
+                    self.friends = friends.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
                 })
                 .store(in: &cancellables)
             return
@@ -58,9 +59,15 @@ class FriendViewModel {
         publisher
             .receive(on: DispatchQueue.main)
             .sink(receiveCompletion: { _ in
+                //TODO: error handle
             }, receiveValue: { [weak self] friends in
-                self?.invites = friends.filter { $0.status == StatusType.inviting.rawValue }
-                self?.friends = friends.filter { $0.status != StatusType.inviting.rawValue }
+                guard let self = self else { return }
+                self.invites = friends
+                    .filter { $0.status == StatusType.inviting.rawValue }
+                    .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+                self.friends = friends
+                    .filter { $0.status != StatusType.inviting.rawValue }
+                    .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
             })
             .store(in: &cancellables)
     }

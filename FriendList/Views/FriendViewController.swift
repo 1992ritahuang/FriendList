@@ -11,7 +11,7 @@ fileprivate enum Section: Int, CaseIterable {
 
 fileprivate enum Item: Hashable, Sendable {
     case invite(Friend)
-    case segment(String)
+    case segment(SegmentModel)
     case search(String)
     case friend(Friend)
     case empty
@@ -20,11 +20,14 @@ fileprivate enum Item: Hashable, Sendable {
 class FriendViewController: UIViewController {
     @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var lblName: UILabel!
-    @IBOutlet weak var lblKokoID: UILabel!
+    @IBOutlet weak var btnKokoID: UIButton!
+    @IBOutlet weak var imgBadge: UIImageView!
     
     var viewModel: FriendViewModel?
     private var cancellables = Set<AnyCancellable>()
     private var dataSource: UICollectionViewDiffableDataSource<Section, Item>!
+    private let refreshCtrl = UIRefreshControl()
+    private var selectCateIndex = 0
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -33,6 +36,7 @@ class FriendViewController: UIViewController {
         setupNavigationBar()
         setupNavigationBarItems()
         configureCollectionView()
+        setupRefreshControl()
         configureDataSource()
         guard let viewModel = viewModel else { return }
         bindViewModel(viewModel)
@@ -42,6 +46,10 @@ class FriendViewController: UIViewController {
         super.viewWillAppear(animated)
         viewModel?.fetchData()
     }
+    
+    @objc private func didPullToRefresh() {
+        viewModel?.fetchData()
+    }
 
     private func bindViewModel(_ viewModel: FriendViewModel) {
         Publishers.CombineLatest3(viewModel.$user, viewModel.$friends, viewModel.$invites)
@@ -49,8 +57,8 @@ class FriendViewController: UIViewController {
             .sink { [weak self] user, friends, invites in
                 guard let self = self else { return }
                 self.applySnapshot(friends: friends, invites: invites)
-                self.lblName.text = user?.name ?? ""
-                self.lblKokoID.text = "KOKO ID: \(user?.kokoid ?? "")"
+                self.updateUserInfoView(user ?? User(name: "", kokoid: ""))
+                self.refreshCtrl.endRefreshing()
             }
             .store(in: &cancellables)
         
@@ -66,10 +74,35 @@ class FriendViewController: UIViewController {
             .store(in: &cancellables)
     }
     
+    private func updateUserInfoView(_ user: User) {
+        var text = ""
+        let kokoid = user.kokoid
+        if kokoid.isEmpty {
+            text = "設定 KOKO ID"
+            self.imgBadge.isHidden = false
+        } else {
+            text = "KOKO ID: \(kokoid)"
+            self.imgBadge.isHidden = true
+        }
+        var config = UIButton.Configuration.plain()
+        config.title = text
+        config.image = .icInfoBackDeepGray
+        config.imagePlacement = .trailing
+        config.titleAlignment = .leading
+        config.contentInsets = .init(top: 0, leading: 0, bottom: 0, trailing: 0)
+        config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+            var outgoing = incoming
+            outgoing.font = UIFont.systemFont(ofSize: 13)
+            return outgoing
+        }
+        self.btnKokoID.configuration = config
+        self.lblName.text = user.name
+    }
+    
     //MARK: Navigation bar related
 
     private func setupNavigationBarItems() {
-        let withdrawButton = UIBarButtonItem(image: UIImage(named: "icNavPinkWithdraw"), style: .plain, target: self, action: #selector(withdrawTapped))
+        let withdrawButton = UIBarButtonItem(image: UIImage(named: "icNavPinkWithdraw"), style: .plain, target: self, action: #selector(atmTapped))
         let transferButton = UIBarButtonItem(image: UIImage(named: "icNavPinkTransfer"), style: .plain, target: self, action: #selector(transferTapped))
         navigationItem.leftBarButtonItems = [withdrawButton, transferButton]
 
@@ -87,7 +120,7 @@ class FriendViewController: UIViewController {
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
     }
 
-    @objc private func withdrawTapped() {}
+    @objc private func atmTapped() {}
     @objc private func transferTapped() {}
     @objc private func scanTapped() {}
     
@@ -96,9 +129,11 @@ class FriendViewController: UIViewController {
     private func configureCollectionView() {
         collectionView.collectionViewLayout = createLayout()
         collectionView.collectionViewLayout.register(SeparatorDecorationView.self, forDecorationViewOfKind: SeparatorDecorationView.elementKind)
-        collectionView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        collectionView.backgroundColor = .white
-        view.addSubview(collectionView)
+    }
+    
+    private func setupRefreshControl() {
+        refreshCtrl.addTarget(self, action: #selector(didPullToRefresh), for: .valueChanged)
+        collectionView.refreshControl = refreshCtrl
     }
 
     private func configureDataSource() {
@@ -108,9 +143,9 @@ class FriendViewController: UIViewController {
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "InviteCell", for: indexPath) as! InviteCell
                 cell.configure(with: friend)
                 return cell
-            case .segment(let title):
+            case .segment(let model):
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "SegmentCell", for: indexPath) as! SegmentCell
-                cell.configure(title: title)
+                cell.configure(model)
                 return cell
             case .search:
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "SearchCell", for: indexPath) as! SearchCell
@@ -134,7 +169,12 @@ class FriendViewController: UIViewController {
         var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
         snapshot.appendSections([.invite, .segment, .search, .friends])
         snapshot.appendItems(invites.map { .invite($0) }, toSection: .invite)
-        snapshot.appendItems(["好友", "聊天"].map { .segment($0) }, toSection: .segment)
+        
+        let segments: [SegmentModel] = [
+            SegmentModel(title: "好友", isSelect: selectCateIndex == 0, badgeCount: invites.count),
+            SegmentModel(title: "聊天", isSelect: selectCateIndex == 1, badgeCount: friends.isEmpty ? 0 : 99)
+        ]
+        snapshot.appendItems(segments.map { .segment($0) }, toSection: .segment)
         
         if friends.isEmpty {
             snapshot.appendSections([.empty])
@@ -169,7 +209,7 @@ class FriendViewController: UIViewController {
 //                layoutSection.boundarySupplementaryItems = [header]
 
             case .segment:
-                let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.4), heightDimension: .absolute(36))
+                let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.5), heightDimension: .absolute(36))
                 let item = NSCollectionLayoutItem(layoutSize: itemSize)
                 let group = NSCollectionLayoutGroup.horizontal(layoutSize: itemSize, subitems: [item])
                 layoutSection = NSCollectionLayoutSection(group: group)
@@ -200,6 +240,17 @@ class FriendViewController: UIViewController {
 
             return layoutSection
         }
+    }
+}
+
+extension FriendViewController: UICollectionViewDelegate {
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        guard indexPath.section == Section.segment.rawValue else { return }
+        selectCateIndex = indexPath.row
+        
+        //update UI
+        applySnapshot(friends: viewModel?.friends ?? [],
+                      invites: viewModel?.invites ?? [])
     }
 }
 

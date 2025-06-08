@@ -48,12 +48,12 @@ class ApiService {
         }
 
         return URLSession.shared.dataTaskPublisher(for: url)
-            .tryMap { output in //類似 map，但支援拋出錯誤 (throw)
+            .tryMap { output in
                 guard let response = output.response as? HTTPURLResponse, response.statusCode == 200 else {
                     throw URLError(.badServerResponse)
                 }
                 return output.data
             }
-            .eraseToAnyPublisher() //轉型成 AnyPublisher<Data, Error>
+            .eraseToAnyPublisher()
     }
 }
